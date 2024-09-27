@@ -55,6 +55,8 @@ namespace ComfyGizmo
                 return;
             }
 
+            if (JoyRotate(dt)) return;
+
             var rotationAxis = GetRotationAxis();
 
             if (ZInput.GetKey(ResetRotationKey.Value.MainKey)) RotationManager.ResetAxis(rotationAxis);
@@ -84,6 +86,72 @@ namespace ComfyGizmo
 
             RotationManager.SetActiveYScale(1.5f);
             return Vector3.up;
+        }
+
+        private const double JoyRotateMinStick = 0.5;
+        private const float JoyRotateInitialDelay = 0.25f;
+        private const float JoyRotateTickDelay = 0.08f;
+
+        private static float _joyRotateTimer;
+        
+        /// <summary>
+        /// Handle joypad rotation.
+        /// </summary>
+        /// <param name="deltaTime">The interval in seconds from the last frame to the current one</param>
+        /// <returns>
+        /// Did handle?
+        /// </returns>
+        //TODO: Support alternative joypad layouts.
+        private static bool JoyRotate(float deltaTime)
+        {
+            bool Reset()
+            {
+                _joyRotateTimer = 0f;
+                return false;
+            }
+
+            if (!ZInput.IsGamepadActive() || !ZInput.GetButton("JoyRotate")) return Reset();
+            
+            if (ZInput.GetButton("JoySit")) RotationManager.ResetRotation();
+            
+            Vector3 axis;
+            
+            var x = ZInput.GetJoyRightStickX();
+            var y = ZInput.GetJoyRightStickY();
+            var ax = Math.Abs(x);
+            var ay = Math.Abs(y);
+            if (ax > ay)
+            {
+                if (ax < JoyRotateMinStick) return Reset();
+                if (ZInput.GetButton("JoyAltPlace"))
+                {
+                    axis = Vector3.forward;
+                    RotationManager.SetActiveZScale(1.5f);
+                }
+                else
+                {
+                    axis = Vector3.up;
+                    RotationManager.SetActiveYScale(1.5f);
+                }
+                axis *= Math.Sign(x);
+            }
+            else
+            {
+                if (ay < JoyRotateMinStick) return Reset();
+                axis = Vector3.right * Math.Sign(y);
+                RotationManager.SetActiveXScale(1.5f);
+            }
+            
+            if (_joyRotateTimer == 0f) RotationManager.Rotate(axis);
+            else if (_joyRotateTimer > JoyRotateInitialDelay)
+            {
+                RotationManager.Rotate(axis);
+                _joyRotateTimer = JoyRotateInitialDelay - JoyRotateTickDelay;
+            }
+
+            _joyRotateTimer += deltaTime;
+            
+            return true;
         }
 
         [HarmonyTranspiler]
