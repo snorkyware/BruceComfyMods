@@ -1,12 +1,15 @@
-﻿namespace ComfyGizmo;
+﻿using HarmonyLib;
 
-using HarmonyLib;
-
-[HarmonyPatch(typeof(Game))]
-static class GamePatch {
-  [HarmonyPostfix]
-  [HarmonyPatch(nameof(Game.Start))]
-  static void StartPostfix() {
-    RotationManager.Initialize();
-  }
+namespace ComfyGizmo
+{
+    [HarmonyPatch(typeof(Game))]
+    internal static class GamePatch
+    {
+        [HarmonyPostfix]
+        [HarmonyPatch(nameof(Game.Start))]
+        private static void StartPostfix()
+        {
+            RotationManager.Initialize();
+        }
+    }
 }

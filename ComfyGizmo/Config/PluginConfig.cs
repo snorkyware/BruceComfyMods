@@ -1,235 +1,239 @@
-﻿namespace ComfyGizmo;
-
-using BepInEx.Configuration;
-
+﻿using BepInEx.Configuration;
 using ComfyLib;
-
 using UnityEngine;
 
-public static class PluginConfig {
-  public static ConfigEntry<int> SnapDivisions { get; private set; }
+namespace ComfyGizmo
+{
+    public static class PluginConfig
+    {
+        public static readonly int MinSnapDivisions = 2;
+        public static readonly int MaxSnapDivisions = 256;
+        public static ConfigEntry<int> SnapDivisions { get; private set; }
 
-  public static ConfigEntry<bool> ShowGizmoPrefab { get; private set; }
-  public static ConfigEntry<bool> ResetRotationOnModeChange { get; private set; }
-  public static ConfigEntry<bool> ResetRotationOnSnapDivisionChange { get; private set; }
-  public static ConfigEntry<bool> IsLocalFrameEnabled { get; private set; }
-  public static ConfigEntry<bool> IsOldRotationEnabled { get; private set; }
-  public static ConfigEntry<bool> IsRoofModeEnabled { get; private set; }
+        public static ConfigEntry<bool> ShowGizmoPrefab { get; private set; }
+        public static ConfigEntry<bool> ResetRotationOnModeChange { get; private set; }
+        public static ConfigEntry<bool> ResetRotationOnSnapDivisionChange { get; private set; }
+        public static ConfigEntry<bool> IsLocalFrameEnabled { get; private set; }
+        public static ConfigEntry<bool> IsOldRotationEnabled { get; private set; }
+        public static ConfigEntry<bool> IsRoofModeEnabled { get; private set; }
 
-  public static readonly int MinSnapDivisions = 2;
-  public static readonly int MaxSnapDivisions = 256;
+        public static ConfigEntry<KeyboardShortcut> XRotationKey { get; private set; }
+        public static ConfigEntry<KeyboardShortcut> ZRotationKey { get; private set; }
+        public static ConfigEntry<KeyboardShortcut> ResetRotationKey { get; private set; }
+        public static ConfigEntry<KeyboardShortcut> ResetAllRotationKey { get; private set; }
+        public static ConfigEntry<KeyboardShortcut> ChangeRotationModeKey { get; private set; }
+        public static ConfigEntry<KeyboardShortcut> CopyPieceRotationKey { get; private set; }
+        public static ConfigEntry<KeyboardShortcut> SelectTargetPieceKey { get; private set; }
+        public static ConfigEntry<KeyboardShortcut> SnapDivisionIncrementKey { get; private set; }
+        public static ConfigEntry<KeyboardShortcut> SnapDivisionDecrementKey { get; private set; }
 
-  public static void BindConfig(ConfigFile config) {
-    SnapDivisions =
-        config.BindInOrder(
-            "Gizmo",
-            "snapDivisions",
-            16,
-            "Number of snap angles per 180 degrees. Vanilla uses 8.",
-            new AcceptableValueRange<int>(MinSnapDivisions, MaxSnapDivisions));
+        public static ConfigEntry<Color> XGizmoColor { get; private set; }
+        public static ConfigEntry<Color> YGizmoColor { get; private set; }
+        public static ConfigEntry<Color> ZGizmoColor { get; private set; }
 
-    SnapDivisions.OnSettingChanged(RotationManager.ResetRotationConditional);
+        public static ConfigEntry<float> XEmissionColorFactor { get; private set; }
+        public static ConfigEntry<float> YEmissionColorFactor { get; private set; }
+        public static ConfigEntry<float> ZEmissionColorFactor { get; private set; }
 
-    BindKeysConfig(config);
-    BindGizmoColorsConfig(config);
+        public static void BindConfig(ConfigFile config)
+        {
+            SnapDivisions =
+                config.BindInOrder(
+                    "Gizmo",
+                    "snapDivisions",
+                    16,
+                    "Number of snap angles per 180 degrees. Vanilla uses 8.",
+                    new AcceptableValueRange<int>(MinSnapDivisions, MaxSnapDivisions));
 
-    ShowGizmoPrefab =
-        config.BindInOrder(
-            "UI",
-            "showGizmoPrefab",
-            true,
-            "Show the Gizmo prefab in placement mode.");
+            SnapDivisions.OnSettingChanged(RotationManager.ResetRotationConditional);
 
-    ResetRotationOnSnapDivisionChange =
-        config.BindInOrder(
-            "Reset",
-            "resetOnSnapDivisionChange",
-            true,
-            "Resets the piece's rotation on snap division change.");
+            BindKeysConfig(config);
+            BindGizmoColorsConfig(config);
 
-    ResetRotationOnModeChange =
-        config.BindInOrder(
-            "Reset",
-            "resetOnModeChange",
-            true,
-            "Resets the piece's rotation on mode switch.");
+            ShowGizmoPrefab =
+                config.BindInOrder(
+                    "UI",
+                    "showGizmoPrefab",
+                    true,
+                    "Show the Gizmo prefab in placement mode.");
 
-    IsRoofModeEnabled =
-        config.BindInOrder(
-            "Modes",
-            "isRoofModeEnabled",
-            false,
-            "Enables roof mode which allows corner roof piece rotation 45 deg compared to normal rotation.");
+            ResetRotationOnSnapDivisionChange =
+                config.BindInOrder(
+                    "Reset",
+                    "resetOnSnapDivisionChange",
+                    true,
+                    "Resets the piece's rotation on snap division change.");
 
-    IsRoofModeEnabled.OnSettingChanged(
-        () => {           
-          RotationManager.ResetRotation();
-          RotationManager.OnModeChange(Player.m_localPlayer);
-        });
+            ResetRotationOnModeChange =
+                config.BindInOrder(
+                    "Reset",
+                    "resetOnModeChange",
+                    true,
+                    "Resets the piece's rotation on mode switch.");
 
-    IsOldRotationEnabled =
-        config.BindInOrder(
-            "Modes",
-            "isOldRotationModeEnabled",
-            false,
-            "Enables pre Gizmo-v1.4.0 rotation scheme.");
+            IsRoofModeEnabled =
+                config.BindInOrder(
+                    "Modes",
+                    "isRoofModeEnabled",
+                    false,
+                    "Enables roof mode which allows corner roof piece rotation 45 deg compared to normal rotation.");
 
-    IsOldRotationEnabled.OnSettingChanged(() => RotationManager.OnModeChange(Player.m_localPlayer));
+            IsRoofModeEnabled.OnSettingChanged(
+                () =>
+                {
+                    RotationManager.ResetRotation();
+                    RotationManager.OnModeChange(Player.m_localPlayer);
+                });
 
-    IsLocalFrameEnabled =
-        config.BindInOrder(
-            "Modes",
-            "isLocalFrameModeEnabled",
-            false,
-            "Enables localFrame rotation mode. Allows rotation around the piece's Y-axis rather than world-Y.");
+            IsOldRotationEnabled =
+                config.BindInOrder(
+                    "Modes",
+                    "isOldRotationModeEnabled",
+                    false,
+                    "Enables pre Gizmo-v1.4.0 rotation scheme.");
 
-    IsLocalFrameEnabled.OnSettingChanged(
-        () => {
-          RotationManager.OnModeChange(Player.m_localPlayer);
-          RotationManager.DisableLocalFrameMode();
-        });
-  }
+            IsOldRotationEnabled.OnSettingChanged(() => RotationManager.OnModeChange(Player.m_localPlayer));
 
-  public static ConfigEntry<KeyboardShortcut> XRotationKey { get; private set; }
-  public static ConfigEntry<KeyboardShortcut> ZRotationKey { get; private set; }
-  public static ConfigEntry<KeyboardShortcut> ResetRotationKey { get; private set; }
-  public static ConfigEntry<KeyboardShortcut> ResetAllRotationKey { get; private set; }
-  public static ConfigEntry<KeyboardShortcut> ChangeRotationModeKey { get; private set; }
-  public static ConfigEntry<KeyboardShortcut> CopyPieceRotationKey { get; private set; }
-  public static ConfigEntry<KeyboardShortcut> SelectTargetPieceKey { get; private set; }
-  public static ConfigEntry<KeyboardShortcut> SnapDivisionIncrementKey { get; private set; }
-  public static ConfigEntry<KeyboardShortcut> SnapDivisionDecrementKey { get; private set; }
+            IsLocalFrameEnabled =
+                config.BindInOrder(
+                    "Modes",
+                    "isLocalFrameModeEnabled",
+                    false,
+                    "Enables localFrame rotation mode. Allows rotation around the piece's Y-axis rather than world-Y.");
 
-  public static void BindKeysConfig(ConfigFile config) {
-    XRotationKey =
-        config.BindInOrder(
-            "Keys",
-            "xRotationKey",
-            new KeyboardShortcut(KeyCode.LeftShift),
-            "Hold this key to rotate on the x-axis/plane (red circle).");
+            IsLocalFrameEnabled.OnSettingChanged(
+                () =>
+                {
+                    RotationManager.OnModeChange(Player.m_localPlayer);
+                    RotationManager.DisableLocalFrameMode();
+                });
+        }
 
-    ZRotationKey =
-        config.BindInOrder(
-            "Keys",
-            "zRotationKey",
-            new KeyboardShortcut(KeyCode.LeftAlt),
-            "Hold this key to rotate on the z-axis/plane (blue circle).");
+        public static void BindKeysConfig(ConfigFile config)
+        {
+            XRotationKey =
+                config.BindInOrder(
+                    "Keys",
+                    "xRotationKey",
+                    new KeyboardShortcut(KeyCode.LeftShift),
+                    "Hold this key to rotate on the x-axis/plane (red circle).");
 
-    ResetRotationKey =
-        config.BindInOrder(
-            "Keys",
-            "resetRotationKey",
-            new KeyboardShortcut(KeyCode.V),
-            "Press this key to reset the selected axis to zero rotation.");
+            ZRotationKey =
+                config.BindInOrder(
+                    "Keys",
+                    "zRotationKey",
+                    new KeyboardShortcut(KeyCode.LeftAlt),
+                    "Hold this key to rotate on the z-axis/plane (blue circle).");
 
-    ResetAllRotationKey =
-        config.BindInOrder(
-            "Keys",
-            "resetAllRotationKey",
-            KeyboardShortcut.Empty,
-            "Press this key to reset _all axis_ rotations to zero rotation.");
+            ResetRotationKey =
+                config.BindInOrder(
+                    "Keys",
+                    "resetRotationKey",
+                    new KeyboardShortcut(KeyCode.V),
+                    "Press this key to reset the selected axis to zero rotation.");
+
+            ResetAllRotationKey =
+                config.BindInOrder(
+                    "Keys",
+                    "resetAllRotationKey",
+                    KeyboardShortcut.Empty,
+                    "Press this key to reset _all axis_ rotations to zero rotation.");
 
 
-    ChangeRotationModeKey =
-        config.BindInOrder(
-            "Keys",
-            "changeRotationMode",
-            new KeyboardShortcut(KeyCode.BackQuote),
-            "Press this key to toggle rotation modes.");
+            ChangeRotationModeKey =
+                config.BindInOrder(
+                    "Keys",
+                    "changeRotationMode",
+                    new KeyboardShortcut(KeyCode.BackQuote),
+                    "Press this key to toggle rotation modes.");
 
-    CopyPieceRotationKey =
-        config.BindInOrder(
-            "Keys",
-            "copyPieceRotation",
-            KeyboardShortcut.Empty,
-            "Press this key to copy targeted piece's rotation.");
+            CopyPieceRotationKey =
+                config.BindInOrder(
+                    "Keys",
+                    "copyPieceRotation",
+                    KeyboardShortcut.Empty,
+                    "Press this key to copy targeted piece's rotation.");
 
-    SelectTargetPieceKey =
-        config.BindInOrder(
-            "Keys",
-            "selectTargetPieceKey",
-            new KeyboardShortcut(KeyCode.P),
-            "Selects target piece to be used.");
+            SelectTargetPieceKey =
+                config.BindInOrder(
+                    "Keys",
+                    "selectTargetPieceKey",
+                    new KeyboardShortcut(KeyCode.P),
+                    "Selects target piece to be used.");
 
-    SnapDivisionIncrementKey =
-        config.BindInOrder(
-            "Keys",
-            "snapDivisionIncrement",
-            new KeyboardShortcut(KeyCode.PageUp),
-            "Doubles snap divisions from current.");
+            SnapDivisionIncrementKey =
+                config.BindInOrder(
+                    "Keys",
+                    "snapDivisionIncrement",
+                    new KeyboardShortcut(KeyCode.PageUp),
+                    "Doubles snap divisions from current.");
 
-    SnapDivisionDecrementKey =
-        config.BindInOrder(
-            "Keys",
-            "snapDivisionDecrement",
-            new KeyboardShortcut(KeyCode.PageDown),
-            "Doubles snap divisions from current.");
-  }
+            SnapDivisionDecrementKey =
+                config.BindInOrder(
+                    "Keys",
+                    "snapDivisionDecrement",
+                    new KeyboardShortcut(KeyCode.PageDown),
+                    "Doubles snap divisions from current.");
+        }
 
-  public static ConfigEntry<Color> XGizmoColor { get; private set; }
-  public static ConfigEntry<Color> YGizmoColor { get; private set; }
-  public static ConfigEntry<Color> ZGizmoColor { get; private set; }
+        public static void BindGizmoColorsConfig(ConfigFile config)
+        {
+            XGizmoColor =
+                config.BindInOrder(
+                    "GizmoColors - X",
+                    "xGizmoColor",
+                    new Color(1, 0, 0, 0.502f),
+                    "Sets the color of x gizmo (rotations about x axis).");
 
-  public static ConfigEntry<float> XEmissionColorFactor { get; private set; }
-  public static ConfigEntry<float> YEmissionColorFactor { get; private set; }
-  public static ConfigEntry<float> ZEmissionColorFactor { get; private set; }
+            XGizmoColor.OnSettingChanged(Gizmos.SetAllXColors);
 
-  public static void BindGizmoColorsConfig(ConfigFile config) {
-    XGizmoColor =
-        config.BindInOrder(
-            "GizmoColors - X",
-            "xGizmoColor",
-            new Color(1, 0, 0, 0.502f),
-            "Sets the color of x gizmo (rotations about x axis).");
+            YGizmoColor =
+                config.BindInOrder(
+                    "GizmoColors - Y",
+                    "yGizmoColor",
+                    new Color(0, 1, 0, 0.502f),
+                    "Sets the color of y gizmo (rotations about y axis).");
 
-    XGizmoColor.OnSettingChanged(Gizmos.SetAllXColors);
+            YGizmoColor.OnSettingChanged(Gizmos.SetAllYColors);
 
-    YGizmoColor =
-       config.BindInOrder(
-            "GizmoColors - Y",
-            "yGizmoColor",
-            new Color(0, 1, 0, 0.502f),
-            "Sets the color of y gizmo (rotations about y axis).");
+            ZGizmoColor =
+                config.BindInOrder(
+                    "GizmoColors - Z",
+                    "zGizmoColor",
+                    new Color(0, 0, 1, 0.502f),
+                    "Sets the color of z gizmo (rotations about z axis).");
 
-    YGizmoColor.OnSettingChanged(Gizmos.SetAllYColors);
+            ZGizmoColor.OnSettingChanged(Gizmos.SetAllZColors);
 
-    ZGizmoColor =
-       config.BindInOrder(
-            "GizmoColors - Z",
-            "zGizmoColor",
-            new Color(0, 0, 1, 0.502f),
-            "Sets the color of z gizmo (rotations about z axis).");
+            XEmissionColorFactor =
+                config.BindInOrder(
+                    "GizmoColors - X",
+                    "emissionColorFactorX",
+                    1f,
+                    "Factor to multiply the target color by and set as emission color.",
+                    new AcceptableValueRange<float>(0f, 3f));
 
-    ZGizmoColor.OnSettingChanged(Gizmos.SetAllZColors);
+            XEmissionColorFactor.OnSettingChanged(Gizmos.SetAllXColors);
 
-    XEmissionColorFactor =
-        config.BindInOrder(
-            "GizmoColors - X",
-            "emissionColorFactorX",
-            1f,
-            "Factor to multiply the target color by and set as emission color.",
-            new AcceptableValueRange<float>(0f, 3f));
+            YEmissionColorFactor =
+                config.BindInOrder(
+                    "GizmoColors - Y",
+                    "emissionColorFactorY",
+                    1f,
+                    "Factor to multiply the target color by and set as emission color.",
+                    new AcceptableValueRange<float>(0f, 3f));
 
-    XEmissionColorFactor.OnSettingChanged(Gizmos.SetAllXColors);
+            YEmissionColorFactor.OnSettingChanged(Gizmos.SetAllYColors);
 
-    YEmissionColorFactor =
-        config.BindInOrder(
-            "GizmoColors - Y",
-            "emissionColorFactorY",
-            1f,
-            "Factor to multiply the target color by and set as emission color.",
-            new AcceptableValueRange<float>(0f, 3f));
+            ZEmissionColorFactor =
+                config.BindInOrder(
+                    "GizmoColors - Z",
+                    "emissionColorFactorZ",
+                    1f,
+                    "Factor to multiply the target color by and set as emission color.",
+                    new AcceptableValueRange<float>(0f, 3f));
 
-    YEmissionColorFactor.OnSettingChanged(Gizmos.SetAllYColors);
-
-    ZEmissionColorFactor =
-        config.BindInOrder(
-            "GizmoColors - Z",
-            "emissionColorFactorZ",
-            1f,
-            "Factor to multiply the target color by and set as emission color.",
-            new AcceptableValueRange<float>(0f, 3f));
-
-    ZEmissionColorFactor.OnSettingChanged(Gizmos.SetAllZColors);
-  }
+            ZEmissionColorFactor.OnSettingChanged(Gizmos.SetAllZColors);
+        }
+    }
 }

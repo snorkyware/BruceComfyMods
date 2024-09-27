@@ -1,12 +1,15 @@
-﻿namespace ComfyGizmo;
+﻿using HarmonyLib;
 
-using HarmonyLib;
-
-[HarmonyPatch(typeof(FejdStartup))]
-static class FejdStartupPatch {
-  [HarmonyPostfix]
-  [HarmonyPatch(nameof(FejdStartup.Awake))]
-  static void AwakePostfix() {
-    HammerTableManager.Initialize();
-  }
+namespace ComfyGizmo
+{
+    [HarmonyPatch(typeof(FejdStartup))]
+    internal static class FejdStartupPatch
+    {
+        [HarmonyPostfix]
+        [HarmonyPatch(nameof(FejdStartup.Awake))]
+        private static void AwakePostfix()
+        {
+            HammerTableManager.Initialize();
+        }
+    }
 }

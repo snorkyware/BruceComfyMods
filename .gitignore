@@ -2,3 +2,5 @@ packages/*
 obj/
 bin/
 .vs/
+.idea
+*.DotSettings.user
